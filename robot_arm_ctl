@@ -1,0 +1,72 @@
+import rclpy
+from rclpy.node import Node
+import serial
+import time
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import cv2
+
+class RobotArmController(Node):
+    def __init__(self):
+        super().__init__('robot_arm_controller')
+
+        # 串口配置
+        self.serial_port = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+        time.sleep(2)  # 等待串口稳定
+
+        # 视频流配置
+        self.cap = cv2.VideoCapture(0)
+        self.br = CvBridge()
+        self.publisher_ = self.create_publisher(Image, 'video_frames', 10)
+        self.timer = self.create_timer(0.1, self.timer_callback)
+
+    def timer_callback(self):
+        # 捕获视频帧
+        ret, frame = self.cap.read()
+        if ret:
+            # 发布视频帧
+            self.publisher_.publish(self.br.cv2_to_imgmsg(frame))
+            self.get_logger().info('Publishing video frame')
+
+            # 此处可以添加图像处理代码，例如人脸检测
+            # 假设我们得到目标的坐标 (center_x, center_y)
+            center_x, center_y = self.process_frame(frame)
+
+            # 根据目标坐标控制机械臂
+            self.control_robot_arm(center_x, center_y)
+
+    def process_frame(self, frame):
+        # 在此处添加图像处理代码（例如使用OpenCV进行人脸检测）
+        # 示例返回值
+        return 100, 200  # 假设我们检测到的坐标
+
+    def control_robot_arm(self, center_x, center_y):
+        # 根据目标坐标构造指令
+        command = self.create_command(center_x, center_y)
+        self.serial_port.write(command)
+        self.get_logger().info(f'Sent command: {command.hex()}')
+
+    def create_command(self, x, y):
+        # 构造您的指令，这里仅为示例
+        # 假设您的协议需要特定格式
+        frame_header = b'\x55\x55'
+        data_length = b'\x09'
+        command_id = b'\x03'
+        servo_id = b'\x01'
+        angle = (x // 2).to_bytes(2, 'little')  # 将x坐标转换为角度
+        checksum = self.calculate_checksum(frame_header + data_length + command_id + servo_id + angle)
+
+        return frame_header + data_length + command_id + servo_id + angle + checksum
+
+    def calculate_checksum(self, data):
+        return bytes([sum(data) % 256])  # 示例校验和计算
+
+def main(args=None):
+    rclpy.init(args=args)
+    robot_arm_controller = RobotArmController()
+    rclpy.spin(robot_arm_controller)
+    robot_arm_controller.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
