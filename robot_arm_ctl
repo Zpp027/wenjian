@@ -28,8 +28,7 @@ class RobotArmController(Node):
             self.publisher_.publish(self.br.cv2_to_imgmsg(frame))
             self.get_logger().info('Publishing video frame')
 
-            # 此处可以添加图像处理代码，例如人脸检测
-            # 假设我们得到目标的坐标 (center_x, center_y)
+            # 图像处理，获取目标的坐标 (center_x, center_y)
             center_x, center_y = self.process_frame(frame)
 
             # 根据目标坐标控制机械臂
@@ -41,25 +40,29 @@ class RobotArmController(Node):
         return 100, 200  # 假设我们检测到的坐标
 
     def control_robot_arm(self, center_x, center_y):
-        # 根据目标坐标构造指令
+        # 根据目标坐标构造16进制指令
         command = self.create_command(center_x, center_y)
         self.serial_port.write(command)
         self.get_logger().info(f'Sent command: {command.hex()}')
 
     def create_command(self, x, y):
-        # 构造您的指令，这里仅为示例
-        # 假设您的协议需要特定格式
-        frame_header = b'\x55\x55'
-        data_length = b'\x09'
-        command_id = b'\x03'
-        servo_id = b'\x01'
-        angle = (x // 2).to_bytes(2, 'little')  # 将x坐标转换为角度
-        checksum = self.calculate_checksum(frame_header + data_length + command_id + servo_id + angle)
+        # 构造指令并以16进制发送
+        frame_header = b'\x55\x55'  # 假设的指令头
+        data_length = b'\x09'       # 数据长度
+        command_id = b'\x03'        # 命令ID
+        servo_id = b'\x01'          # 伺服ID
+        angle_x = (x & 0xFFFF).to_bytes(2, byteorder='little')  # 将x坐标转换为角度并确保16位表示
+        angle_y = (y & 0xFFFF).to_bytes(2, byteorder='little')  # 将y坐标转换为角度并确保16位表示
+        # 拼接数据包
+        data_packet = frame_header + data_length + command_id + servo_id + angle_x + angle_y
+        # 计算校验和
+        checksum = self.calculate_checksum(data_packet)
 
-        return frame_header + data_length + command_id + servo_id + angle + checksum
+        return data_packet + checksum
 
     def calculate_checksum(self, data):
-        return bytes([sum(data) % 256])  # 示例校验和计算
+        # 简单校验和计算，返回16进制
+        return bytes([sum(data) % 256])  # 取数据和的最后一个字节
 
 def main(args=None):
     rclpy.init(args=args)
