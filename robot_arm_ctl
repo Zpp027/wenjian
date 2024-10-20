@@ -37,6 +37,9 @@ class MinimalSubscriber(Node):
 
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
+        # 创建一个空的总掩模图像（初始为全黑）
+        combined_mask = np.zeros_like(cv2.inRange(hsv, np.array([0, 0, 0]), np.array([0, 0, 0])))
+
         # 存储所有颜色质心
         all_centroids = []
 
@@ -51,6 +54,9 @@ class MinimalSubscriber(Node):
             kernel = np.ones((5, 5), np.uint8)
             mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
             mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+            # 将当前颜色的掩模叠加到总掩模中
+            combined_mask = cv2.bitwise_or(combined_mask, mask)
 
             # Find contours for the current color
             contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -74,18 +80,11 @@ class MinimalSubscriber(Node):
                 cv2.drawContours(image, [box], 0, color_boxes[color], 2)
                 cv2.circle(image, (cx, cy), 5, (255, 255, 255), -1)  # 质心用白色标记
 
-                # Draw on mask (black & white)
-                cv2.drawContours(mask, [box], 0, 255, 2)
-                cv2.circle(mask, (cx, cy), 5, 255, -1)
-
                 # Show centroid text on image
                 cv2.putText(image, f"{color.capitalize()} Centroid: ({cx}, {cy})", 
-                            (int(cx), int(cy) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                            (int(cx), int(cy) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
             all_centroids.extend(current_centroids)
-
-            # 显示当前颜色的掩模
-            cv2.imshow(f"Mask - {color.capitalize()}", mask)
 
         # 输出质心变化
         if all_centroids != self.last_centroids:
@@ -95,8 +94,9 @@ class MinimalSubscriber(Node):
         # 更新质心信息
         self.last_centroids = all_centroids.copy()
 
-        # 显示原始图像
+        # 显示原始图像和合并的二值掩模图像
         cv2.imshow("Original Frame", image)
+        cv2.imshow("Combined Mask (All Colors)", combined_mask)
         cv2.waitKey(10)
 
     def listener_callback(self, data):
