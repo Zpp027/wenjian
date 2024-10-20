@@ -11,8 +11,9 @@ class MinimalSubscriber(Node):
 
     def __init__(self,name):
         super().__init__(name)
-        self.subscription = self.create_subscription(Image,'/image_raw',self.listener_callback,10)
+        self.subscription = self.create_subscription(Image,'/image_raw',self.listener_callback,1)
         self.br = CvBridge()
+        self.last_centroids = []
         
     def object_detect(self,image):
         # 函数：计算质心
@@ -24,58 +25,55 @@ class MinimalSubscriber(Node):
         # 设置颜色范围（这里以蓝色为例）
         lower_blue = np.array([100, 150, 0])  # 低范围 (Hue, Saturation, Value)
         upper_blue = np.array([140, 255, 255])  # 高范围
-        
-        # 初始化变量，记录上一次的质心坐标
-        last_centroids = []
+       
 
-        while True:
+        # 转换为HSV颜色空间
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-            # 转换为HSV颜色空间
-            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        # 根据颜色范围创建掩模
+        mask = cv2.inRange(hsv, lower_blue, upper_blue)
 
-            # 根据颜色范围创建掩模
-            mask = cv2.inRange(hsv, lower_blue, upper_blue)
+        # 使用形态学操作来减少噪声（闭运算 -> 开运算）
+        kernel = np.ones((5, 5), np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
 
-            # 使用形态学操作来减少噪声（闭运算 -> 开运算）
-            kernel = np.ones((5, 5), np.uint8)
-            mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-            mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        # 寻找轮廓
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-            # 寻找轮廓
-            contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        current_centroids = []
 
-            current_centroids = []
-
-            for contour in contours:
-                # 排除小面积的噪声
-                if cv2.contourArea(contour) < 500:
+        for contour in contours:
+            # 排除小面积的噪声
+            if cv2.contourArea(contour) < 500:
                     continue
 
-                # 计算边界框
-                x, y, w, h = cv2.boundingRect(contour)
+            # 计算边界框
+            x, y, w, h = cv2.boundingRect(contour)
         
-                # 计算质心坐标
-                cx, cy = calculate_centroid(x, y, w, h)
-                current_centroids.append((cx, cy))
+            # 计算质心坐标
+            cx, cy = calculate_centroid(x, y, w, h)
+            current_centroids.append((cx, cy))
 
-                # 在原始帧中绘制矩形框和质心
-                cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                cv2.circle(image, (cx, cy), 5, (255, 0, 0), -1)
+            # 在原始帧中绘制矩形框和质心
+            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            cv2.circle(image, (cx, cy), 5, (255, 0, 0), -1)
 
-                # 在黑白图（掩模）中绘制矩形框和质心
-                cv2.rectangle(mask, (x, y), (x + w, y + h), 255, 2)
-                cv2.circle(mask, (cx, cy), 5, 255, -1)
+            # 在黑白图（掩模）中绘制矩形框和质心
+            cv2.rectangle(mask, (x, y), (x + w, y + h), 255, 2)
+            cv2.circle(mask, (cx, cy), 5, 255, -1)
 
-                # 显示质心坐标
-                cv2.putText(image, f"Centroid: ({cx}, {cy})", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+            # 显示质心坐标
+            cv2.putText(image, f"Centroid: ({cx}, {cy})", 
+            (x, y - 10),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
         # 只有当质心发生变化时，输出质心坐标
-        if current_centroids != last_centroids:
+        if current_centroids != self.last_centroids:
             for cx, cy in current_centroids:
                 print(f"Object centroid at: ({cx}, {cy})")
 
         # 更新上一次的质心坐标
-        last_centroids = current_centroids.copy()
+        self.last_centroids = current_centroids.copy()
 
         # 显示图像
         cv2.imshow("Original Frame", image)
