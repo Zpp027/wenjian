@@ -1,1 +1,67 @@
-111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+cmake_minimum_required(VERSION 3.5)
+project(robot_arm_control)
+
+find_package(ament_cmake REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+	"msg/RobotCentroid.msg"
+)
+
+
+ament_python_install_package(${PROJECT_NAME})
+
+install(
+	DIRECTORY robot_arm_control/
+	DESTINATION lib/${PROJECT_NAME}
+	USE_SOURCE_PERMISSIONS
+)
+
+
+ament_export_dependencies(rosidl_default_runtime)
+ament_package()
+
+
+
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>robot_arm_control</name>
+  <version>0.0.0</version>
+  <description>TODO: Package for controlling robot arm</description>
+  <maintainer email="3113419133@qq.com">ubuntu</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+  
+  <build_depend>rclpy</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+  
+
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>image_transport</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>  
+  
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
+
+
+
