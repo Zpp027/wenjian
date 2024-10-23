@@ -3,8 +3,8 @@ import math
 i_object_position=eval(input())
 # def idea1(l1,l2,l3):
 factor=0.75
-i_arm_position = (24.5,-7)  # 机械臂的坐标
-arm_position = (i_arm_position[0]*factor,i_arm_position[1]*factor)  # 机械臂的坐标
+arm_position = (245,-70)  # 机械臂的坐标
+# arm_position = (i_arm_position[0]*factor,i_arm_position[1]*factor)  # 机械臂的坐标
 object_position = (i_object_position[0]*factor,i_object_position[1]*factor)  # 物体的坐标
 print(arm_position)
 print(object_position)
@@ -67,6 +67,27 @@ def idea4(arm_position,object_position):
     angle1_deg=angle1_2_deg-angle1_1_deg
     return angle1_deg,angle2_deg
 
+def split_hex(hex_num):
+    # 去掉 '0x' 前缀并补齐位数为偶数
+    hex_str = f"{hex_num:04x}"
+    
+    # 每两位截断
+    result = [hex_str[i:i+2] for i in range(0, len(hex_str), 2)]
+    return result
+
+def angle_to_hex(angle_deg1,angle_deg2):
+    factor_arm = 0.09
+    angle_hex1,angle_hex2 = int(angle_deg1/factor_arm)+500, int(angle_deg2/factor_arm)+500
+    angle_hex1_ar = split_hex(angle_hex1)
+    # print(angle_hex1_ar[0],angle_hex1_ar[1])
+    angle_hex1_1, angle_hex1_2 = hex(int(angle_hex1_ar[0],16)), hex(int(angle_hex1_ar[1],16))
+    angle_hex2_ar = split_hex(angle_hex2)
+    angle_hex2_1, angle_hex2_2 = hex(int(angle_hex2_ar[0],16)), hex(int(angle_hex2_ar[1],16))
+
+    return angle_hex1_1, angle_hex1_2, angle_hex2_1, angle_hex2_2
+
+
+
 # arm_position = (0, 0)  # 机械臂的坐标
 # object_position = (120, 50)  # 物体的坐标
 
@@ -79,14 +100,17 @@ def call_idea(distance):
         idea2(arm_position,object_position)
         angle_deg1, angle_deg2 = idea2(arm_position, object_position)
         print("{:.2f},{:.2f}".format(angle_deg1, angle_deg2))
+        print(angle_to_hex(angle_deg1,angle_deg2))
     elif distance>154.65 and distance<242:
         idea3(arm_position,object_position)
         angle_deg1, angle_deg2 = idea3(arm_position, object_position)
         print("{:.2f},{:.2f}".format(angle_deg1, angle_deg2))
+        print(angle_to_hex(angle_deg1,angle_deg2))
     elif distance>242 and distance<338.65:
         idea4(arm_position,object_position)
         angle_deg1, angle_deg2 = idea4(arm_position, object_position)
         print("{:.2f},{:.2f}".format(angle_deg1, angle_deg2))
+        print(angle_to_hex(angle_deg1,angle_deg2))
     else:
         print("距离不对")
 call_idea(distance)  # 调用方法1
@@ -98,3 +122,4 @@ call_idea(distance)  # 调用方法1
 # object_position = (5, 5)  # 物体的坐标
 # angle_deg1,angle_deg2=idea2(arm_position,object_position)
 # print("{:.2f},{:.2f}".format(angle_deg1,angle_deg2))
+
