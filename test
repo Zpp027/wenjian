@@ -1,125 +1,243 @@
+import serial
+import time
 import math
-# i_arm_position=eval(input())
-i_object_position=eval(input())
-# def idea1(l1,l2,l3):
-factor=0.75
-arm_position = (245,-70)  # 机械臂的坐标
-# arm_position = (i_arm_position[0]*factor,i_arm_position[1]*factor)  # 机械臂的坐标
-object_position = (i_object_position[0]*factor,i_object_position[1]*factor)  # 物体的坐标
-print(arm_position)
-print(object_position)
-# (0,0)
-# (120,50)
-def idea2(arm_position,object_position):
-    l1 = 104
-    l2 = 88.65
-    # l3 = 175]
-    # height = 95
-    x_arm, y_arm = arm_position
-    x_obj, y_obj = object_position
-    distance = math.sqrt((y_obj - y_arm) **2 + (x_obj - x_arm) **2)
-    angle_rad2=math.acos((distance-l2)/l1)
-    angle_deg2 = math.degrees(angle_rad2)
-    angle_deg1=180-angle_deg2
-    return angle_deg1,angle_deg2
 
-def idea3(arm_position,object_position):
-    l1 = 104
-    l2 = 88.65
-    l3 = 175
-    height = 95
-    x_arm, y_arm = arm_position
-    x_obj, y_obj = object_position
-    distance = math.sqrt((y_obj - y_arm) **2+ (x_obj - x_arm) **2)
-    m = math.sqrt(l2 ** 2 + l3 ** 2)
-    n=math.sqrt(distance**2+height**2)
-    #求二角度
-    angle2_1_rad=math.atan(l3/l2)
-    angle2_2_rad=math.acos((m**2+l1**2-n**2)/(2*m*l1))
-    angle2_1_deg = math.degrees(angle2_1_rad)
-    angle2_2_deg = math.degrees(angle2_2_rad)
-    angle2_deg=angle2_1_deg+angle2_2_deg
-    #求一角度
-    angle1_1_rad=math.acos((n**2+l1**2-m**2)/(2*n*l1))
-    angle1_1_deg = math.degrees(angle1_1_rad)
-    angle1_2_rad=math.atan(height/distance)
-    angle1_2_deg = math.degrees(angle1_2_rad)
-    angle1_deg=angle1_1_deg-angle1_2_deg
-    return angle1_deg,angle2_deg
+ser = serial.Serial('/dev/tyyUSB0',9600,timeout = 1)
+time.sleep(1)
 
-def idea4(arm_position,object_position):
-    l1 = 104
-    l2 = 88.65
-    l3 = 175
-    height = 95
-    x_arm, y_arm = arm_position
-    x_obj, y_obj = object_position
-    distance = math.sqrt((y_obj - y_arm) **2+ (x_obj - x_arm) **2)
-    n = math.sqrt(distance ** 2 + height ** 2)
-    # 求二角度
-    angle2_rad = math.acos((l3 ** 2 + (l1 + l2) ** 2 - n ** 2) / (2 * l3 * (l1 + l2)))
-    angle2_deg = math.degrees(angle2_rad)
-    # 求一角度
-    angle1_1_rad= math.atan(height/distance)
-    angle1_1_deg = math.degrees(angle1_1_rad)
-    angle1_2_rad = math.acos((n**2+(l1+l2)**2-l3**2)/(2*n*(l1+l2)))
-    angle1_2_deg = math.degrees(angle1_2_rad)
-    angle1_deg=angle1_2_deg-angle1_1_deg
-    return angle1_deg,angle2_deg
+def init():
+	a = 1
+    print('init begin')
+	ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x01\x00\x02\n\r')
+	time.sleep(a)
+	ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x05\xdc\x05\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x02\x22\x05\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x04\x00\x09\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x02\x22\x05\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x06\x30\x03\n\r')
+	time.sleep(a)    
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x03\x00\x06\n\r')
+	time.sleep(a)
+    print('init end')
+def catch_2(hex1_1, hex1_2, hex2_1, hex2_2, hex_03_1, hex_03_2):
+	a = 1
+    hex02_1, hex02_2, hex06_1, hex06_2, hex03_1, hex03_2 = hex1_1, hex1_2, hex2_1, hex2_2, hex_03_1, hex_03_2
+    print('catch_2 begin')
+	ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x01\x00\x02\n\r')
+	time.sleep(a)
+	ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x05\xdc\x05\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x04\xc4\x09\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x02\x{hex02_2}\x{hex02_1}\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x03\x{hex03_2}\x{hex03_1}\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x06\x{hex06_2}\x{hex06_1}\n\r')
+	time.sleep(a)    
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x01\x55\x04\n\r')
+	time.sleep(a)
+    print('catch_2 end')
+def catch_3(hex1_1, hex1_2, hex2_1, hex2_2, hex_03, hex_03_1, hex_03_2):
+	a = 1
+    hex02_1, hex02_2, hex06_1, hex06_2, hex03_1, hex03_2 = hex1_1, hex1_2, hex2_1, hex2_2, hex_03_1, hex_03_2
+    print('catch_3 begin')
+	ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x01\x00\x02\n\r')
+	time.sleep(a)
+	ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x05\x99\x05\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x04\xc4\x09\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x03\x{hex03_2}\x{hex03_1}\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x06\x{hex06_2}\x{hex06_1}\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x02\x{hex02_2}\x{hex02_1}\n\r')
+	time.sleep(a)    
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x01\x55\x04\n\r')
+	time.sleep(a)
+    print('catch_3 end')
+def catch_4(hex1_1, hex1_2, hex2_1, hex2_2, hex_03, hex_03_1, hex_03_2):                                           
+	a = 1
+    hex02_1, hex02_2, hex04_1, hex04_2, hex03_1, hex03_2 = hex1_1, hex1_2, hex2_1, hex2_2, hex_03_1, hex_03_2
+    print('catch_4 begin')
+	ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x01\x00\x02\n\r')
+	time.sleep(a)
+	ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x05\xdc\x05\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x04\x{hex04_2}\x{hex04_1}\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x06\xfc\x05\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x03\x{hex03_2}\x{hex03_1}\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x02\x{hex02_2}\x{hex02_1}\n\r')
+	time.sleep(a)    
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x01\x55\x04\n\r')
+	time.sleep(a)
+    print('catch_4 end')
+	
+def down()
+	a = 1
+    print('down begin')
+	ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x02\x22\x05\n\r')
+	time.sleep(a)
+	ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x04\x00\x09\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x06\x30\x03\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x03\x00\x06\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x02\x22\x07\n\r')
+	time.sleep(a)
+    ser.write(b'\x55\x55\x08\x03\x01\x08\x08\x01\x00\x02\n\r')
+	time.sleep(a)
+    print('down end')
+def arm_position_hex(self):	
 
-def split_hex(hex_num):
-    # 去掉 '0x' 前缀并补齐位数为偶数
-    hex_str = f"{hex_num:04x}"
+    i_object_position = (self.x,self.y)  #物块坐标
     
-    # 每两位截断
-    result = [hex_str[i:i+2] for i in range(0, len(hex_str), 2)]
-    return result
-
-def angle_to_hex(angle_deg1,angle_deg2):
-    factor_arm = 0.09
-    angle_hex1,angle_hex2 = int(angle_deg1/factor_arm)+500, int(angle_deg2/factor_arm)+500
-    angle_hex1_ar = split_hex(angle_hex1)
-    # print(angle_hex1_ar[0],angle_hex1_ar[1])
-    angle_hex1_1, angle_hex1_2 = hex(int(angle_hex1_ar[0],16)), hex(int(angle_hex1_ar[1],16))
-    angle_hex2_ar = split_hex(angle_hex2)
-    angle_hex2_1, angle_hex2_2 = hex(int(angle_hex2_ar[0],16)), hex(int(angle_hex2_ar[1],16))
-
-    return angle_hex1_1, angle_hex1_2, angle_hex2_1, angle_hex2_2
+    factor=0.75
+    arm_position = (245,-70)  # 机械臂的坐标
+    
+    object_position = (i_object_position[0]*factor,i_object_position[1]*factor)  # 物体的坐标
+    delta_x = object_position[0] + 70
+    delta_y = object_position[1]- 245
+    angle_rad_disk = math.atan2(delta_y, delta_x)
+    #底盘旋转角度
+    angle_deg_disk = math.degrees(angle_rad_disk)+90
+    
+#    print(arm_position)
+#    print(object_position)
 
 
+    def idea2(arm_position,object_position):
+        l1 = 104
+        l2 = 88.65
 
-# arm_position = (0, 0)  # 机械臂的坐标
-# object_position = (120, 50)  # 物体的坐标
+        x_arm, y_arm = arm_position
+        x_obj, y_obj = object_position
+        distance = math.sqrt((y_obj - y_arm) **2 + (x_obj - x_arm) **2)
+        angle_rad1_1=math.acos((distance-l2)/l1)
+        angle_deg1_1 = math.degrees(angle_rad1_1)
+        #02
+        angle_deg1=180-angle_deg1_1
+        #06
+        angle_deg2=angle_deg1_1-90
+        return angle_deg1,angle_deg2
+    
+    def idea3(arm_position,object_position):
+        #机械臂参数
+        l1 = 104
+        l2 = 88.65
+        l3 = 175
+        height = 95
+        x_arm, y_arm = arm_position
+        x_obj, y_obj = object_position
+        distance = math.sqrt((y_obj - y_arm) **2+ (x_obj - x_arm) **2)
+        m = math.sqrt(l2 ** 2 + l3 ** 2)
+        n=math.sqrt(distance**2+height**2)
+        #求二角度
+        angle2_1_rad=math.atan(l3/l2)
+        angle2_2_rad=math.acos((m**2+l1**2-n**2)/(2*m*l1))
+        angle2_1_deg = math.degrees(angle2_1_rad)
+        angle2_2_deg = math.degrees(angle2_2_rad)
+        #06
+        angle2_deg=angle2_1_deg+angle2_2_deg-90
+        #求一角度
+        angle1_1_rad=math.acos((n**2+l1**2-m**2)/(2*n*l1))
+        angle1_1_deg = math.degrees(angle1_1_rad)
+        angle1_2_rad=math.atan(height/distance)
+        angle1_2_deg = math.degrees(angle1_2_rad)
+        #02
+        angle1_deg=180-(angle1_1_deg-angle1_2_deg)
+        return angle1_deg,angle2_deg
+    
+    def idea4(arm_position,object_position):
+        l1 = 104
+        l2 = 88.65
+        l3 = 175
+        height = 95
+        x_arm, y_arm = arm_position
+        x_obj, y_obj = object_position
+        distance = math.sqrt((y_obj - y_arm) **2+ (x_obj - x_arm) **2)
+        n = math.sqrt(distance ** 2 + height ** 2)
+        # 求二角度
+        angle2_rad = math.acos((l3 ** 2 + (l1 + l2) ** 2 - n ** 2) / (2 * l3 * (l1 + l2)))
+        i_angle2_deg = math.degrees(angle2_rad)
+        #04
+        angle2_deg = 270-i_angle2_deg
+        # 求一角度
+        angle1_1_rad= math.atan(height/distance)
+        angle1_1_deg = math.degrees(angle1_1_rad)
+        angle1_2_rad = math.acos((n**2+(l1+l2)**2-l3**2)/(2*n*(l1+l2)))
+        angle1_2_deg = math.degrees(angle1_2_rad)
+        #02
+        angle1_deg=180-(angle1_2_deg-angle1_1_deg)
+        return angle1_deg,angle2_deg
+    
+    def split_hex(hex_an_num):
+        hex_num = hex_an_num
+        
+        # 1. 将十六进制数转换为两个字节，并翻转顺序
+        hex_str = f"{hex_num:04x}"  # 将整数转换为4位的十六进制字符串（例如 '0381'）
+        byte1, byte2 = hex_str[:2], hex_str[2:] 
+        return byte1, byte2
+    
+    def angle_to_hex(angle_deg1,angle_deg2, angle_deg_disk):
+        factor_arm = 0.09
+        angle_hex1,angle_hex2,angle_deg_disk = hex(int(angle_deg1/factor_arm)+500), hex(int(angle_deg2/factor_arm)+500), 
+        hex(int(angle_deg_disk/factor_arm)+500)
+        angle_hex1_ar = split_hex(angle_hex1)
+        angle_hex1_1, angle_hex1_2 = angle_hex1_ar[0], angle_hex1_ar[1]
+        angle_hex2_ar = split_hex(angle_hex2)
+        angle_hex2_1, angle_hex2_2 = angle_hex2_ar[0], angle_hex2_ar[1]
+        angle_disk_ar = split_hex(angle_deg_disk)
+        angle_disk_1, angle_disk_2 = angle_hex2_ar[0], angle_hex2_ar[1]
+    
+        return angle_hex1_1, angle_hex1_2, angle_hex2_1, angle_hex2_2, angle_disk_1, angle_disk_2
+    
+    
+    #计算物体机械臂距离
+    x_arm, y_arm = arm_position
+    x_obj, y_obj = object_position
+    distance = math.sqrt((y_obj - y_arm) ** 2 + (x_obj - x_arm) ** 2)
+    print(distance)
+    #驱动机械臂
+    def call_idea(distance):
+        if distance>88.65 and distance<154.65:
+            idea2(arm_position,object_position)
+            angle_deg1, angle_deg2 = idea2(arm_position, object_position)
+            angle_hex1_1, angle_hex1_2, angle_hex2_1, angle_hex2_2angle_disk_1, angle_disk_2 = angle_to_hex(angle_deg1,angle_deg2)
+            catch_2(angle_hex1_1, angle_hex1_2, angle_hex2_1, angle_hex2_2,angle_disk_1, angle_disk_2)
+            down()
+            init()
+            
 
-x_arm, y_arm = arm_position
-x_obj, y_obj = object_position
-distance = math.sqrt((y_obj - y_arm) ** 2 + (x_obj - x_arm) ** 2)
-print(distance)
-def call_idea(distance):
-    if distance>88.65 and distance<154.65:
-        idea2(arm_position,object_position)
-        angle_deg1, angle_deg2 = idea2(arm_position, object_position)
-        print("{:.2f},{:.2f}".format(angle_deg1, angle_deg2))
-        print(angle_to_hex(angle_deg1,angle_deg2))
-    elif distance>154.65 and distance<242:
-        idea3(arm_position,object_position)
-        angle_deg1, angle_deg2 = idea3(arm_position, object_position)
-        print("{:.2f},{:.2f}".format(angle_deg1, angle_deg2))
-        print(angle_to_hex(angle_deg1,angle_deg2))
-    elif distance>242 and distance<338.65:
-        idea4(arm_position,object_position)
-        angle_deg1, angle_deg2 = idea4(arm_position, object_position)
-        print("{:.2f},{:.2f}".format(angle_deg1, angle_deg2))
-        print(angle_to_hex(angle_deg1,angle_deg2))
-    else:
-        print("距离不对")
-call_idea(distance)  # 调用方法1
-# call_idea(distance)  # 调用方法2
-# call_idea(distance)  # 调用方法3
-# call_idea(distance)  # 无效的选项
+        elif distance>154.65 and distance<242:
+            idea3(arm_position,object_position)
+            angle_deg1, angle_deg2 = idea3(arm_position, object_position)
+            angle_hex1_1, angle_hex1_2, angle_hex2_1, angle_hex2_2angle_disk_1, angle_disk_2 = angle_to_hex(angle_deg1,angle_deg2)
+            catch_2(angle_hex1_1, angle_hex1_2, angle_hex2_1, angle_hex2_2,angle_disk_1, angle_disk_2)
+            down()
+            init()
 
-# arm_position = (0, 0)  # 机械臂的坐标
-# object_position = (5, 5)  # 物体的坐标
-# angle_deg1,angle_deg2=idea2(arm_position,object_position)
-# print("{:.2f},{:.2f}".format(angle_deg1,angle_deg2))
+        elif distance>242 and distance<338.65:
+            idea4(arm_position,object_position)
+            angle_deg1, angle_deg2 = idea4(arm_position, object_position)
+            angle_hex1_1, angle_hex1_2, angle_hex2_1, angle_hex2_2angle_disk_1, angle_disk_2 = angle_to_hex(angle_deg1,angle_deg2)
+            catch_2(angle_hex1_1, angle_hex1_2, angle_hex2_1, angle_hex2_2,angle_disk_1, angle_disk_2)
+            down()
+            init()
 
+        else:
+            print("物块距离过近/过远")
+            print(distance)
+        return 
+    init()
+    call_idea(distance)  # 调用方法
+    
