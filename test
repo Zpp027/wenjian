@@ -180,8 +180,8 @@ def arm_position_hex(self):
         angle1_deg=180-(angle1_2_deg-angle1_1_deg)
         return angle1_deg,angle2_deg
     
-    def split_hex(hex_an_num):
-        hex_num = hex_an_num
+def split_hex(hex_an_num):
+        hex_num = int(hex_an_num,16)
         
         # 1. 将十六进制数转换为两个字节，并翻转顺序
         hex_str = f"{hex_num:04x}"  # 将整数转换为4位的十六进制字符串（例如 '0381'）
