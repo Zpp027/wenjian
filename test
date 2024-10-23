@@ -1,67 +1,100 @@
-cmake_minimum_required(VERSION 3.5)
-project(robot_arm_control)
+import math
+# i_arm_position=eval(input())
+i_object_position=eval(input())
+# def idea1(l1,l2,l3):
+factor=0.75
+i_arm_position = (24.5,-7)  # 机械臂的坐标
+arm_position = (i_arm_position[0]*factor,i_arm_position[1]*factor)  # 机械臂的坐标
+object_position = (i_object_position[0]*factor,i_object_position[1]*factor)  # 物体的坐标
+print(arm_position)
+print(object_position)
+# (0,0)
+# (120,50)
+def idea2(arm_position,object_position):
+    l1 = 104
+    l2 = 88.65
+    # l3 = 175]
+    # height = 95
+    x_arm, y_arm = arm_position
+    x_obj, y_obj = object_position
+    distance = math.sqrt((y_obj - y_arm) **2 + (x_obj - x_arm) **2)
+    angle_rad2=math.acos((distance-l2)/l1)
+    angle_deg2 = math.degrees(angle_rad2)
+    angle_deg1=180-angle_deg2
+    return angle_deg1,angle_deg2
 
-find_package(ament_cmake REQUIRED)
-find_package(rclpy REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
+def idea3(arm_position,object_position):
+    l1 = 104
+    l2 = 88.65
+    l3 = 175
+    height = 95
+    x_arm, y_arm = arm_position
+    x_obj, y_obj = object_position
+    distance = math.sqrt((y_obj - y_arm) **2+ (x_obj - x_arm) **2)
+    m = math.sqrt(l2 ** 2 + l3 ** 2)
+    n=math.sqrt(distance**2+height**2)
+    #求二角度
+    angle2_1_rad=math.atan(l3/l2)
+    angle2_2_rad=math.acos((m**2+l1**2-n**2)/(2*m*l1))
+    angle2_1_deg = math.degrees(angle2_1_rad)
+    angle2_2_deg = math.degrees(angle2_2_rad)
+    angle2_deg=angle2_1_deg+angle2_2_deg
+    #求一角度
+    angle1_1_rad=math.acos((n**2+l1**2-m**2)/(2*n*l1))
+    angle1_1_deg = math.degrees(angle1_1_rad)
+    angle1_2_rad=math.atan(height/distance)
+    angle1_2_deg = math.degrees(angle1_2_rad)
+    angle1_deg=angle1_1_deg-angle1_2_deg
+    return angle1_deg,angle2_deg
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-	"msg/RobotCentroid.msg"
-)
+def idea4(arm_position,object_position):
+    l1 = 104
+    l2 = 88.65
+    l3 = 175
+    height = 95
+    x_arm, y_arm = arm_position
+    x_obj, y_obj = object_position
+    distance = math.sqrt((y_obj - y_arm) **2+ (x_obj - x_arm) **2)
+    n = math.sqrt(distance ** 2 + height ** 2)
+    # 求二角度
+    angle2_rad = math.acos((l3 ** 2 + (l1 + l2) ** 2 - n ** 2) / (2 * l3 * (l1 + l2)))
+    angle2_deg = math.degrees(angle2_rad)
+    # 求一角度
+    angle1_1_rad= math.atan(height/distance)
+    angle1_1_deg = math.degrees(angle1_1_rad)
+    angle1_2_rad = math.acos((n**2+(l1+l2)**2-l3**2)/(2*n*(l1+l2)))
+    angle1_2_deg = math.degrees(angle1_2_rad)
+    angle1_deg=angle1_2_deg-angle1_1_deg
+    return angle1_deg,angle2_deg
 
+# arm_position = (0, 0)  # 机械臂的坐标
+# object_position = (120, 50)  # 物体的坐标
 
-ament_python_install_package(${PROJECT_NAME})
+x_arm, y_arm = arm_position
+x_obj, y_obj = object_position
+distance = math.sqrt((y_obj - y_arm) ** 2 + (x_obj - x_arm) ** 2)
+print(distance)
+def call_idea(distance):
+    if distance>88.65 and distance<154.65:
+        idea2(arm_position,object_position)
+        angle_deg1, angle_deg2 = idea2(arm_position, object_position)
+        print("{:.2f},{:.2f}".format(angle_deg1, angle_deg2))
+    elif distance>154.65 and distance<242:
+        idea3(arm_position,object_position)
+        angle_deg1, angle_deg2 = idea3(arm_position, object_position)
+        print("{:.2f},{:.2f}".format(angle_deg1, angle_deg2))
+    elif distance>242 and distance<338.65:
+        idea4(arm_position,object_position)
+        angle_deg1, angle_deg2 = idea4(arm_position, object_position)
+        print("{:.2f},{:.2f}".format(angle_deg1, angle_deg2))
+    else:
+        print("距离不对")
+call_idea(distance)  # 调用方法1
+# call_idea(distance)  # 调用方法2
+# call_idea(distance)  # 调用方法3
+# call_idea(distance)  # 无效的选项
 
-install(
-	DIRECTORY robot_arm_control/
-	DESTINATION lib/${PROJECT_NAME}
-	USE_SOURCE_PERMISSIONS
-)
-
-
-ament_export_dependencies(rosidl_default_runtime)
-ament_package()
-
-
-
-<?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<package format="3">
-  <name>robot_arm_control</name>
-  <version>0.0.0</version>
-  <description>TODO: Package for controlling robot arm</description>
-  <maintainer email="3113419133@qq.com">ubuntu</maintainer>
-  <license>Apache-2.0</license>
-
-  <buildtool_depend>ament_cmake</buildtool_depend>
-  <buildtool_depend>rosidl_default_generators</buildtool_depend>
-  
-  <build_depend>rclpy</build_depend>
-  <build_depend>image_transport</build_depend>
-  <build_depend>cv_bridge</build_depend>
-  <build_depend>sensor_msgs</build_depend>
-  <build_depend>std_msgs</build_depend>
-  
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_flake8</test_depend>
-  <test_depend>ament_pep257</test_depend>
-  <test_depend>python3-pytest</test_depend>
-  
-
-  <exec_depend>rosidl_default_runtime</exec_depend>
-  <exec_depend>rclpy</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
-  <exec_depend>image_transport</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
-  <exec_depend>cv_bridge</exec_depend>  
-  
-  <member_of_group>rosidl_interface_packages</member_of_group>
-
-  <export>
-    <build_type>ament_python</build_type>
-  </export>
-</package>
-
-
-
+# arm_position = (0, 0)  # 机械臂的坐标
+# object_position = (5, 5)  # 物体的坐标
+# angle_deg1,angle_deg2=idea2(arm_position,object_position)
+# print("{:.2f},{:.2f}".format(angle_deg1,angle_deg2))
